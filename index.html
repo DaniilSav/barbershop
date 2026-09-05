@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Black Razor — барбершоп</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="site-header" id="top">
+  <div class="container header-inner">
+    <a class="logo" href="#top">
+      <svg class="logo-icon" width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 3L14 14M14 14L21 21M14 14L21 3M14 14L3 21" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        <circle cx="14" cy="14" r="1.6" fill="currentColor"/>
+      </svg>
+      <span>BLACK <em>RAZOR</em></span>
+    </a>
+
+    <nav class="main-nav" id="mainNav">
+      <a href="#services">Услуги</a>
+      <a href="#gallery">Галерея</a>
+      <a href="#masters">Мастера</a>
+      <a href="#booking">Запись</a>
+      <a href="#contacts">Контакты</a>
+    </nav>
+
+    <button class="btn btn-primary header-cta" onclick="scrollToId('booking')">Записаться</button>
+    <button class="burger" id="burgerBtn" aria-label="Меню">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero-stripes" aria-hidden="true"></div>
+  <div class="container hero-inner">
+    <p class="hero-eyebrow">Мужской барбершоп с 2014 года</p>
+    <h1 class="hero-title">BLACK <span>RAZOR</span></h1>
+    <p class="hero-slogan">Острый стиль. Твёрдый характер.</p>
+    <div class="hero-actions">
+      <button class="btn btn-primary" onclick="scrollToId('booking')">Записаться</button>
+      <button class="btn btn-ghost" onclick="scrollToId('services')">Услуги и цены</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SERVICES ===== -->
+<section class="section" id="services">
+  <div class="container">
+    <p class="section-eyebrow">Прайс-лист</p>
+    <h2 class="section-title">Услуги и цены</h2>
+    <p class="section-sub">Выберите одну или несколько услуг — калькулятор сам посчитает стоимость и время.</p>
+
+    <div class="services-grid" id="servicesGrid">
+      <!-- filled by JS -->
+    </div>
+  </div>
+
+  <div class="summary-bar" id="summaryBar">
+    <div class="container summary-inner">
+      <div class="summary-info">
+        <span id="summaryCount">Услуги не выбраны</span>
+      </div>
+      <div class="summary-totals">
+        <span class="summary-total-item">Время: <strong id="summaryTime">0</strong> мин</span>
+        <span class="summary-total-item">Итого: <strong id="summaryPrice">0</strong> ₽</span>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="scrollToId('booking')">Записаться</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== GALLERY ===== -->
+<section class="section section-alt" id="gallery">
+  <div class="container">
+    <p class="section-eyebrow">Портфолио</p>
+    <h2 class="section-title">Галерея работ</h2>
+    <p class="section-sub">Немного из того, что происходит в наших креслах.</p>
+
+    <div class="gallery-grid">
+      <div class="gallery-item span-2"><img src="https://picsum.photos/seed/blackrazor1/800/600" alt="Работа барбера — стрижка" loading="lazy"></div>
+      <div class="gallery-item"><img src="https://picsum.photos/seed/blackrazor2/500/600" alt="Работа барбера — бритьё" loading="lazy"></div>
+      <div class="gallery-item"><img src="https://picsum.photos/seed/blackrazor3/500/600" alt="Работа барбера — борода" loading="lazy"></div>
+      <div class="gallery-item"><img src="https://picsum.photos/seed/blackrazor4/500/500" alt="Работа барбера — фейд" loading="lazy"></div>
+      <div class="gallery-item span-2"><img src="https://picsum.photos/seed/blackrazor5/800/500" alt="Интерьер барбершопа" loading="lazy"></div>
+      <div class="gallery-item"><img src="https://picsum.photos/seed/blackrazor6/500/600" alt="Работа барбера — укладка" loading="lazy"></div>
+      <div class="gallery-item"><img src="https://picsum.photos/seed/blackrazor7/500/600" alt="Работа барбера — камуфляж седины" loading="lazy"></div>
+      <div class="gallery-item"><img src="https://picsum.photos/seed/blackrazor8/500/500" alt="Инструменты барбера" loading="lazy"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== MASTERS ===== -->
+<section class="section" id="masters">
+  <div class="container">
+    <p class="section-eyebrow">Команда</p>
+    <h2 class="section-title">Выберите мастера</h2>
+    <p class="section-sub">Три топ-барбера — три разных почерка. Выбор перенесётся в форму записи.</p>
+
+    <div class="masters-grid" id="mastersGrid">
+      <!-- filled by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ===== BOOKING ===== -->
+<section class="section section-alt" id="booking">
+  <div class="container">
+    <p class="section-eyebrow">Запись онлайн</p>
+    <h2 class="section-title">Запишитесь на приём</h2>
+    <p class="section-sub">Заполните форму — мы перезвоним и подтвердим время.</p>
+
+    <div class="booking-wrap">
+      <form id="bookingForm" class="booking-form" novalidate>
+
+        <div class="form-row">
+          <label for="fName">Имя</label>
+          <input type="text" id="fName" name="fName" placeholder="Иван Иванов" autocomplete="name">
+          <span class="form-error" id="errName"></span>
+        </div>
+
+        <div class="form-row">
+          <label for="fPhone">Телефон</label>
+          <input type="tel" id="fPhone" name="fPhone" placeholder="+7 (999) 123-45-67" autocomplete="tel">
+          <span class="form-error" id="errPhone"></span>
+        </div>
+
+        <div class="form-row">
+          <label for="fMaster">Мастер</label>
+          <select id="fMaster" name="fMaster">
+            <option value="">— Выберите мастера —</option>
+          </select>
+          <span class="form-error" id="errMaster"></span>
+        </div>
+
+        <div class="form-row">
+          <label>Выбранные услуги</label>
+          <div class="booking-services-summary" id="bookingServicesSummary">
+            Услуги ещё не выбраны. <a href="#services" onclick="scrollToId('services');return false;">Выбрать в разделе «Услуги»</a>
+          </div>
+          <span class="form-error" id="errServices"></span>
+        </div>
+
+        <div class="form-row form-row-split">
+          <div>
+            <label for="fDate">Дата</label>
+            <input type="date" id="fDate" name="fDate">
+            <span class="form-error" id="errDate"></span>
+          </div>
+          <div>
+            <label for="fTime">Время</label>
+            <select id="fTime" name="fTime">
+              <option value="">— Выберите время —</option>
+            </select>
+            <span class="form-error" id="errTime"></span>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Записаться</button>
+
+        <div class="form-success" id="formSuccess" hidden></div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CONTACTS ===== -->
+<section class="section" id="contacts">
+  <div class="container">
+    <p class="section-eyebrow">Мы на месте</p>
+    <h2 class="section-title">Адрес и часы работы</h2>
+
+    <div class="contacts-grid">
+      <div class="contacts-info">
+        <div class="contact-item">
+          <span class="contact-label">Адрес</span>
+          <span class="contact-value">г. Москва, ул. Примерная, д. 12</span>
+        </div>
+        <div class="contact-item">
+          <span class="contact-label">Часы работы</span>
+          <span class="contact-value">Пн–Вс: 10:00 — 21:00</span>
+        </div>
+        <div class="contact-item">
+          <span class="contact-label">Телефон</span>
+          <span class="contact-value">+7 (999) 123-45-67</span>
+        </div>
+        <div class="contact-item">
+          <span class="contact-label">Соцсети</span>
+          <span class="contact-value contact-social">
+            <a href="#">Instagram</a> · <a href="#">Telegram</a> · <a href="#">WhatsApp</a>
+          </span>
+        </div>
+      </div>
+      <div class="contacts-map">
+        <iframe
+          title="Карта расположения барбершопа"
+          src="https://www.openstreetmap.org/export/embed.html?bbox=37.5900%2C55.7300%2C37.6300%2C55.7500&layer=mapnik"
+          loading="lazy">
+        </iframe>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <span class="logo footer-logo">BLACK <em>RAZOR</em></span>
+    <p>© 2026 Black Razor Barbershop. Все права защищены.</p>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
