@@ -148,19 +148,23 @@
           <span class="form-error" id="errServices"></span>
         </div>
 
-        <div class="form-row form-row-split">
-          <div>
-            <label for="fDate">Дата</label>
-            <input type="date" id="fDate" name="fDate">
-            <span class="form-error" id="errDate"></span>
+        <div class="form-row">
+          <label for="fDate">Дата</label>
+          <input type="date" id="fDate" name="fDate">
+          <span class="form-error" id="errDate"></span>
+        </div>
+
+        <div class="form-row">
+          <label>Время</label>
+          <div class="slots-legend">
+            <span><i class="dot dot-free"></i>свободно</span>
+            <span><i class="dot dot-selected"></i>выбрано</span>
+            <span><i class="dot dot-taken"></i>занято</span>
           </div>
-          <div>
-            <label for="fTime">Время</label>
-            <select id="fTime" name="fTime">
-              <option value="">— Выберите время —</option>
-            </select>
-            <span class="form-error" id="errTime"></span>
+          <div class="time-slots" id="timeSlots">
+            <p class="slots-hint">Выберите мастера, услуги и дату — покажем свободное время.</p>
           </div>
+          <span class="form-error" id="errTime"></span>
         </div>
 
         <button type="submit" class="btn btn-primary btn-block">Записаться</button>

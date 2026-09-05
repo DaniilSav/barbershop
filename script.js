@@ -35,10 +35,12 @@ const MASTERS = [
 const WORK_START_MIN = 10 * 60; // 10:00
 const WORK_END_MIN = 21 * 60;   // 21:00
 const SLOT_STEP = 30;
+const BOOKINGS_KEY = 'blackRazorBookings';
 
 const state = {
   selectedServices: new Set(),
   selectedMaster: null,
+  selectedTime: null,
 };
 
 // ===== Utilities =====
@@ -52,6 +54,47 @@ function formatMinutes(mins) {
   const h = String(Math.floor(mins / 60)).padStart(2, '0');
   const m = String(mins % 60).padStart(2, '0');
   return `${h}:${m}`;
+}
+
+function parseTime(str) {
+  const [h, m] = str.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function getTotalServiceTime() {
+  return SERVICES.filter(s => state.selectedServices.has(s.id)).reduce((sum, s) => sum + s.time, 0);
+}
+
+// Каждая услуга занимает своё время, поэтому запись на несколько услуг
+// бронирует несколько последовательных 30-минутных слотов подряд.
+function getNeededSlotCount() {
+  const total = getTotalServiceTime();
+  return total > 0 ? Math.ceil(total / SLOT_STEP) : 1;
+}
+
+// ===== Bookings storage (демо: общие слоты видны только в этом браузере) =====
+function getBookings() {
+  try {
+    return JSON.parse(localStorage.getItem(BOOKINGS_KEY)) || [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveBookingRecord(record) {
+  const bookings = getBookings();
+  bookings.push(record);
+  localStorage.setItem(BOOKINGS_KEY, JSON.stringify(bookings));
+}
+
+function getOccupiedSlotSet(masterId, date) {
+  const occupied = new Set();
+  getBookings().forEach(b => {
+    if (b.masterId === masterId && b.date === date) {
+      b.slots.forEach(t => occupied.add(t));
+    }
+  });
+  return occupied;
 }
 
 // ===== Render services =====
@@ -78,6 +121,7 @@ function renderServices() {
       else state.selectedServices.delete(id);
       cb.closest('.service-card').classList.toggle('selected', cb.checked);
       updateSummary();
+      renderAvailableSlots();
     });
   });
 }
@@ -144,17 +188,68 @@ function selectMaster(id) {
   const select = document.getElementById('fMaster');
   if (select.value !== (id || '')) select.value = id || '';
   clearError('errMaster');
+  state.selectedTime = null;
+  renderAvailableSlots();
 }
 
-// ===== Time slots =====
-function renderTimeSlots() {
-  const select = document.getElementById('fTime');
-  for (let t = WORK_START_MIN; t <= WORK_END_MIN - SLOT_STEP; t += SLOT_STEP) {
-    const opt = document.createElement('option');
-    opt.value = formatMinutes(t);
-    opt.textContent = formatMinutes(t);
-    select.appendChild(opt);
+// ===== Time slots (calendar-style, per master + date, reads local bookings) =====
+function renderAvailableSlots() {
+  const container = document.getElementById('timeSlots');
+  const masterId = state.selectedMaster;
+  const dateVal = document.getElementById('fDate').value;
+
+  if (!masterId || !dateVal) {
+    container.innerHTML = '<p class="slots-hint">Выберите мастера, услуги и дату — покажем свободное время.</p>';
+    state.selectedTime = null;
+    return;
   }
+
+  const neededSlots = getNeededSlotCount();
+  const occupied = getOccupiedSlotSet(masterId, dateVal);
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+  const isBlocked = (t) => {
+    const isPast = dateVal === todayStr && t <= nowMinutes;
+    if (isPast) return 'past';
+    for (let k = 0; k < neededSlots; k++) {
+      if (occupied.has(formatMinutes(t + k * SLOT_STEP))) return 'taken';
+    }
+    return null;
+  };
+
+  // Если ранее выбранное время больше не помещается (сменились услуги/дата/мастер) — сбрасываем.
+  if (state.selectedTime) {
+    const t = parseTime(state.selectedTime);
+    if (t > WORK_END_MIN - neededSlots * SLOT_STEP || isBlocked(t)) {
+      state.selectedTime = null;
+    }
+  }
+
+  let html = '';
+  let anySlot = false;
+  for (let t = WORK_START_MIN; t <= WORK_END_MIN - neededSlots * SLOT_STEP; t += SLOT_STEP) {
+    anySlot = true;
+    const label = formatMinutes(t);
+    const blockedReason = isBlocked(t);
+    const isSelected = state.selectedTime === label;
+    const classes = ['time-slot'];
+    if (blockedReason) classes.push('taken');
+    if (isSelected) classes.push('selected');
+    const title = blockedReason === 'past' ? 'Время уже прошло' : blockedReason === 'taken' ? 'Этот мастер уже занят на это время' : `Занимает ${neededSlots * SLOT_STEP} мин`;
+    html += `<button type="button" class="${classes.join(' ')}" data-time="${label}" ${blockedReason ? 'disabled' : ''} title="${title}">${label}</button>`;
+  }
+
+  container.innerHTML = anySlot ? html : '<p class="slots-hint">На эту дату нет окна нужной длительности у этого мастера. Выберите другой день.</p>';
+
+  container.querySelectorAll('.time-slot:not(.taken)').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.selectedTime = btn.dataset.time;
+      clearError('errTime');
+      renderAvailableSlots();
+    });
+  });
 }
 
 // ===== Date min =====
@@ -162,6 +257,10 @@ function setupDateInput() {
   const dateInput = document.getElementById('fDate');
   const today = new Date();
   dateInput.min = today.toISOString().split('T')[0];
+  dateInput.addEventListener('change', () => {
+    state.selectedTime = null;
+    renderAvailableSlots();
+  });
 }
 
 // ===== Form validation =====
@@ -229,21 +328,22 @@ function validateForm() {
     }
   }
 
-  const timeVal = document.getElementById('fTime').value;
+  const timeVal = state.selectedTime;
   if (!timeVal) {
-    setError('errTime', 'Укажите время записи.');
+    setError('errTime', 'Выберите время в календаре.');
     valid = false;
-  } else if (dateVal) {
-    const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
-    if (dateVal === todayStr) {
-      const [h, m] = timeVal.split(':').map(Number);
-      const slotMinutes = h * 60 + m;
-      const nowMinutes = now.getHours() * 60 + now.getMinutes();
-      if (slotMinutes <= nowMinutes) {
-        setError('errTime', 'На сегодня выберите время позже текущего.');
-        valid = false;
-      }
+  } else if (masterVal && dateVal) {
+    // Защита от гонки: время могло быть занято другой записью в этом же браузере между выбором и сабмитом.
+    const neededSlots = getNeededSlotCount();
+    const occupied = getOccupiedSlotSet(masterVal, dateVal);
+    const t = parseTime(timeVal);
+    const requiredTimes = Array.from({ length: neededSlots }, (_, k) => formatMinutes(t + k * SLOT_STEP));
+    const conflict = requiredTimes.some(rt => occupied.has(rt));
+    if (conflict) {
+      setError('errTime', 'Это время только что заняли — выберите другое.');
+      state.selectedTime = null;
+      renderAvailableSlots();
+      valid = false;
     }
   }
 
@@ -259,29 +359,37 @@ function handleSubmit(e) {
 
   const name = document.getElementById('fName').value.trim();
   const phone = document.getElementById('fPhone').value.trim();
-  const master = MASTERS.find(m => m.id === document.getElementById('fMaster').value);
+  const masterId = document.getElementById('fMaster').value;
+  const master = MASTERS.find(m => m.id === masterId);
   const chosen = SERVICES.filter(s => state.selectedServices.has(s.id));
   const totalPrice = chosen.reduce((sum, s) => sum + s.price, 0);
   const totalTime = chosen.reduce((sum, s) => sum + s.time, 0);
   const date = document.getElementById('fDate').value;
-  const time = document.getElementById('fTime').value;
+  const time = state.selectedTime;
+  const neededSlots = getNeededSlotCount();
+  const startMin = parseTime(time);
+  const occupiedSlots = Array.from({ length: neededSlots }, (_, k) => formatMinutes(startMin + k * SLOT_STEP));
+
+  saveBookingRecord({ masterId, date, slots: occupiedSlots, name, phone });
 
   successBox.hidden = false;
   successBox.innerHTML = `
     Спасибо, ${name}! Вы записаны к мастеру <strong>${master.name}</strong>
-    на <strong>${date} в ${time}</strong>.<br>
+    на <strong>${date} в ${time}</strong> (${totalTime} мин).<br>
     Услуги: ${chosen.map(s => s.name).join(', ')}.<br>
-    Итого: <strong>${totalPrice} ₽</strong>, время приёма — <strong>${totalTime} мин</strong>.<br>
-    Мы позвоним на номер ${phone} для подтверждения.
+    Итого: <strong>${totalPrice} ₽</strong>.<br>
+    Это время у мастера теперь занято — другие клиенты его не увидят. Мы позвоним на номер ${phone} для подтверждения.
   `;
 
   document.getElementById('bookingForm').reset();
   state.selectedServices.clear();
   document.querySelectorAll('.service-check').forEach(cb => cb.closest('.service-card').classList.remove('selected'));
   state.selectedMaster = null;
+  state.selectedTime = null;
   document.querySelectorAll('.master-card').forEach(c => c.classList.remove('selected'));
   document.querySelectorAll('.master-select-btn').forEach(btn => btn.textContent = 'Выбрать мастера');
   updateSummary();
+  renderAvailableSlots();
 }
 
 // ===== Mobile nav =====
@@ -296,9 +404,9 @@ function setupBurger() {
 document.addEventListener('DOMContentLoaded', () => {
   renderServices();
   renderMasters();
-  renderTimeSlots();
   setupDateInput();
   setupBurger();
   updateSummary();
+  renderAvailableSlots();
   document.getElementById('bookingForm').addEventListener('submit', handleSubmit);
 });
